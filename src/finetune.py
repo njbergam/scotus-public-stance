@@ -64,7 +64,7 @@ class StanceDataset(Dataset):
         self.doc = []
         self.attn = []
         print('loading DataSet!')
-        for i in tqdm(range(int(len(doc)))):
+        for i in tqdm(range(int(len(doc)/1000))):
             if label[i] == -1.0:
                 print('found!')
                 self.label.append(2.0)
@@ -111,7 +111,8 @@ class BERT_Arch(nn.Module):
     def forward(self, sent_id, mask):
 
       #pass the inputs to the model  
-      _, cls_hs = self.bert(sent_id,mask)#, attention_mask=mask)
+
+      _, cls_hs = self.bert(sent_id, attention_mask=mask)
       
       x = self.fc1(cls_hs)
 
@@ -162,7 +163,7 @@ def cross_entropy(preds, labels):
 # function to train the model
 def train(model):
     # define the optimizer
-    optimizer = AdamW(model.parameters(),lr = 1e-5)          # learning rate
+    optimizer = AdamW(model.parameters(),lr = 1e-5, weight_decay=1e-5)          # learning rate
 
     model.train()
 
@@ -190,8 +191,8 @@ def train(model):
         model.zero_grad()        
 
         # get model predictions for the current batch
-        softmax = nn.LogSoftmax(dim=1)
-        preds = softmax(model.bert(sent_id, mask).logits)
+        #softmax = nn.LogSoftmax(dim=1)
+        preds = model(sent_id, mask)#softmax(model.bert(sent_id, mask).logits)
 
 
         #preds = np.argmax(outputs.logits.cpu().detach().numpy(), axis=1).flatten()
@@ -240,6 +241,8 @@ def evaluate(model):
 
     # empty list to save the model predictions
     total_preds = []
+
+    t0 = time.time()
 
     # iterate over batches
     for step,batch in enumerate(val_dataloader):
@@ -317,18 +320,18 @@ if __name__ == '__main__':
     model = None
     if args.model.split('/')[-1].split('-')[0] == 'legal':
         print('Using legal BERT!')
-        tokenizer = AutoTokenizer.from_pretrained("nlpaueb/legal-bert-base-uncased")
-        model = AutoModelForSequenceClassification.from_pretrained("nlpaueb/legal-bert-base-uncased", num_labels=3)
+        tokenizer = AutoTokenizer.from_pretrained("nlpaueb/legal-bert-base-uncased", )
+        model = AutoModelForSequenceClassification.from_pretrained("nlpaueb/legal-bert-base-uncased", num_labels=3, output_hidden_states=True)
         model.load_state_dict(torch.load(args.model))
     elif args.model.split('/')[-1].split('-')[0] == 'long':
         print('Using longformer!')
         tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096") 
-        model = AutoModelForSequenceClassification.from_pretrained("allenai/longformer-base-4096", num_labels=3)#BertModel(BertConfig()) #AutoModelForSequenceClassification.from_config(config)
+        model = AutoModelForSequenceClassification.from_pretrained("allenai/longformer-base-4096", num_labels=3, output_hidden_states=True)#BertModel(BertConfig()) #AutoModelForSequenceClassification.from_config(config)
         model.load_state_dict(torch.load(args.model))
     else:
         print('Using bert-base-uncased')
         tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased') 
-        model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3)
+        model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=3, output_hidden_states=True)
         model.load_state_dict(torch.load(args.model))
 
     model = BERT_Arch(model)
@@ -360,7 +363,7 @@ if __name__ == '__main__':
     train_losses=[]
     valid_losses=[]
 
-    epochs = 10
+    epochs = 4
     #for each epoch
     for epoch in range(epochs):
         
