@@ -1,0 +1,7 @@
+
+import nltk
+
+nltk.sent_tokenize(text)
+
+# CONCEPT: IF WE WANT TO DETERMINE THE MOST USEFUL PART OF THE DATA
+# WE CAN TAKE SUBSETS OF THE 
