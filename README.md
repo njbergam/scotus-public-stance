@@ -1,5 +1,5 @@
 # scotus-public-stance
- Analyzing the SCOTUS-public opinion problem using automated stance detection
+The Supreme Court of the United States (SCOTUS) is arguably designed to be the least democratic branch of the federal government. As such, the manner in which its decisions reflect public opinion is a curious phenomenon. This project takes a computational linguistics approach to the problem: using transformer-based language models, we track the large-scale pattens in SCOTUS discourse over the last fifty years.
 
 # Dependencies
 
